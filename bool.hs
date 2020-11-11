@@ -23,4 +23,10 @@ removeConst x = case x of
 simplifyConst :: Form -> Form
 simplifyConst (f1 `And` f2) = removeConst ((simplifyConst f1) `And` (simplifyConst f2)) 
 simplifyConst (f1 `Or` f2) = removeConst ((simplifyConst f1) `Or` (simplifyConst f2)) 
-simplifyConst f1 = removeConst f1
+simplifyConst f = removeConst f
+
+nnf :: Form -> Form
+nnf (Not (f1 `Or` f2)) = nnf (Not f1) `And` nnf (Not f2)
+nnf (Not (f1 `And` f2)) = nnf (Not f1) `Or` nnf (Not f2)
+nnf (Not (Not f)) = f
+nnf (Not f) = Not f
