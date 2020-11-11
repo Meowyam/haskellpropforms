@@ -8,14 +8,19 @@ data Form
 
 removeConst :: Form -> Form
 removeConst x = case x of
-                  (f `And` C True) -> f
-                  (C True `And` f) -> f
                   (f `And` C False) -> C False
                   (C False `And` f) -> C False
-                  (f `Or` C True) -> f
-                  (C True `Or` f) -> f
+                  (f `And` C True) -> f
+                  (C True `And` f) -> f
                   (f `Or` C False) -> f 
                   (C False `Or` f) -> f
+                  (f `Or` C True) -> f
+                  (C True `Or` f) -> f
                   (Not (C False)) -> C True
                   (Not (C True)) -> C False
                   f -> f
+
+simplifyConst :: Form -> Form
+simplifyConst (f1 `And` f2) = removeConst ((simplifyConst f1) `And` (simplifyConst f2)) 
+simplifyConst (f1 `Or` f2) = removeConst ((simplifyConst f1) `Or` (simplifyConst f2)) 
+simplifyConst f1 = removeConst f1
