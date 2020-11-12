@@ -97,3 +97,26 @@ subst (V x)(y, True)
 subst (V x)(y, False)
   | (x == y) = C False 
   | (x /= y) = (V x)
+subst (C True `And` f) (y, True) = (C True `And` (subst f (y, True)))
+subst (C False `And` f) (y, True) = (C False `And` (subst f (y, True)))
+subst (C True `And` f) (y, False) = (C True `And` (subst f (y, False)))
+subst (C False `And` f) (y, False) = (C False `And` (subst f (y, False)))
+subst ((C True) `Or` f) (y, True) = (C True `Or` (subst f (y, True)))
+subst ((C False) `Or` f) (y, True) = (C False `Or` (subst f (y, True)))
+subst ((C True) `Or` f) (y, False) = (C True `Or` (subst f (y, False)))
+subst ((C False) `Or` f) (y, False) = (C False `Or` (subst f (y, False)))
+subst (Not (C True) `And` f) (y, True) = (Not (C True) `And` (subst f (y, True)))
+subst (Not (C False) `And` f) (y, True) = (Not (C False) `And` (subst f (y, True)))
+subst (Not (C True) `And` f) (y, False) = (Not (C True) `And` (subst f (y, False)))
+subst (Not (C False) `And` f) (y, False) = (Not (C False) `And` (subst f (y, False)))
+subst (Not (C True) `Or` f) (y, True) = (Not (C True) `Or` (subst f (y, True)))
+subst (Not (C False) `Or` f) (y, True) = (Not (C False) `Or` (subst f (y, True)))
+subst (Not (C True) `Or` f) (y, False) = (Not (C True) `Or` (subst f (y, False)))
+subst (Not (C False) `Or` f) (y, False) = (Not (C False) `Or` (subst f (y, False)))
+subst (C True) _ = C True
+subst (C False) _ = C False
+subst (Not (C True)) _ = Not (C True)
+subst (Not (C False)) _ = Not (C False)
+
+substAll :: Form -> [(String, Bool)] -> Form
+substAll f l = foldl subst f l
