@@ -16,8 +16,8 @@ removeConst x = case x of
                   (C True `And` f) -> f
                   (f `Or` C False) -> f 
                   (C False `Or` f) -> f
-                  (f `Or` C True) -> f
-                  (C True `Or` f) -> f
+                  (f `Or` C True) -> C True
+                  (C True `Or` f) -> C True
                   (Not (C False)) -> C True
                   (Not (C True)) -> C False
                   f -> f
