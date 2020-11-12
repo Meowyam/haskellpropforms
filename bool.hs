@@ -25,6 +25,7 @@ removeConst x = case x of
 simplifyConst :: Form -> Form
 simplifyConst (f1 `And` f2) = removeConst ((simplifyConst f1) `And` (simplifyConst f2)) 
 simplifyConst (f1 `Or` f2) = removeConst ((simplifyConst f1) `Or` (simplifyConst f2)) 
+simplifyConst (Not f) = removeConst (simplifyConst f)
 simplifyConst f = removeConst f
 
 nnf :: Form -> Form
@@ -56,6 +57,7 @@ fvList (Not (V x) `And` f) = x : fvList f
 fvList (Not (V x) `Or` f) = x : fvList f
 fvList (Not (V x)) = x : []
 fvList (V x) = x : []
+fvList (C _) = []
 
 fv :: Form -> [String]
 fv f = nub $ fvList $ nnf f
