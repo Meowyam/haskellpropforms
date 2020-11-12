@@ -58,7 +58,7 @@ fvList (Not (V x)) = x : []
 fvList (V x) = x : []
 
 fv :: Form -> [String]
-fv = nub . fvList
+fv f = nub $ fvList $ nnf f
 
 subst :: Form -> (String, Bool) -> Form
 subst ((V x) `And` f) (y, True)
@@ -120,7 +120,7 @@ subst (Not (C False)) _ = Not (C False)
 -- rewrite subst
 
 substAll :: Form -> [(String, Bool)] -> Form
-substAll f l = foldl subst f l
+substAll = foldl subst
 
 getBool :: Form -> Bool
 getBool f
@@ -128,4 +128,20 @@ getBool f
   | f == C False = False
 
 evalSubst :: Form -> [(String, Bool)] -> Bool
-evalSubst f l = getBool $ simplifyConst $ (substAll f l)
+evalSubst f l = getBool $ simplifyConst $ (substAll (nnf f) l)
+
+models :: Form -> [(String, Bool)] -> [String] -> [[(String, Bool)]]
+models f vl (vn:vns) = (models f ((vn, True):vl) vns) ++ (models f ((vn, False):vl) vns)
+models f vl []
+  | (evalSubst f vl) == True = [vl]
+  | otherwise = []
+-- models is wrong
+
+allModels :: Form -> [[(String, Bool)]]
+allModels f = models f [] (fv f)
+
+unsatisfiable :: Form -> Bool
+unsatisfiable f = null (allModels f)
+
+valid :: Form -> Bool
+valid f = (unsatisfiable (Not f))
