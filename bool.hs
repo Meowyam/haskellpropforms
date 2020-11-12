@@ -117,6 +117,15 @@ subst (C True) _ = C True
 subst (C False) _ = C False
 subst (Not (C True)) _ = Not (C True)
 subst (Not (C False)) _ = Not (C False)
+-- rewrite subst
 
 substAll :: Form -> [(String, Bool)] -> Form
 substAll f l = foldl subst f l
+
+getBool :: Form -> Bool
+getBool f
+  | f == C True = True
+  | f == C False = False
+
+evalSubst :: Form -> [(String, Bool)] -> Bool
+evalSubst f l = getBool $ simplifyConst $ (substAll f l)
