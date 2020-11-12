@@ -55,8 +55,8 @@ fvList (V x `And` f) = x : fvList f
 fvList (V x `Or` f) = x : fvList f
 fvList (Not (V x) `And` f) = x : fvList f
 fvList (Not (V x) `Or` f) = x : fvList f
-fvList (Not (V x)) = x : []
-fvList (V x) = x : []
+fvList (Not (V x)) = [x]
+fvList (V x) = [x]
 fvList (C _) = []
 
 fv :: Form -> [String]
