@@ -58,68 +58,32 @@ fvList (Not (V x) `Or` f) = x : fvList f
 fvList (Not (V x)) = [x]
 fvList (V x) = [x]
 fvList (C _) = []
+fvList (Not f) = fvList f
+fvList (Not f1 `And` f2) = (fvList f1) ++ (fvList f2)
+fvList (Not f1 `Or` f2) = (fvList f1) ++ (fvList f2)
 
 fv :: Form -> [String]
 fv f = nub $ fvList $ nnf f
 
 subst :: Form -> (String, Bool) -> Form
-subst ((V x) `And` f) (y, True)
-  | (x == y) = (C True `And` (subst f(y, True)))
-  | (x /= y) = ((V x) `And` (subst f(y, True)))
-subst ((V x) `And` f) (y, False)
-  | (x == y) = (C False `And` (subst f)(y, False))
-  | (x /= y) = ((V x) `And` (subst f)(y, False))
-subst ((V x) `Or` f) (y, True)
-  | (x == y) = (C True `Or` (subst f)(y, True))
-  | (x /= y) = ((V x) `Or` (subst f)(y, True))
-subst ((V x) `Or` f) (y, False)
-  | (x == y) = (C False `Or` (subst f)(y, False))
-  | (x /= y) = ((V x) `And` (subst f)(y, False))
-subst (Not (V x) `And` f) (y, True)
-  | (x == y) = (Not (C True) `And` (subst f(y, True)))
-  | (x /= y) = ((V x) `And` (subst f(y, True)))
-subst (Not (V x) `And` f) (y, False)
-  | (x == y) = (Not (C False) `And` (subst f)(y, False))
-  | (x /= y) = ((V x) `And` (subst f)(y, False))
-subst (Not (V x) `Or` f) (y, True)
-  | (x == y) = (Not (C True) `Or` (subst f)(y, True))
-  | (x /= y) = ((V x) `Or` (subst f)(y, True))
-subst (Not (V x) `Or` f) (y, False)
-  | (x == y) = (Not (C False) `Or` (subst f)(y, False))
-  | (x /= y) = ((V x) `And` (subst f)(y, False))
-subst (Not (V x)) (y, True)
-  | (x == y) = Not (C True)
-  | (x /= y) = (Not (V x))
-subst (Not (V x)) (y, False)
-  | (x == y) = Not (C False)
-  | (x /= y) = (Not (V x))
-subst (V x)(y, True)
-  | (x == y) = C True
+subst (V x)(y, b)
+  | (x == y) = (C b)
   | (x /= y) = (V x)
-subst (V x)(y, False)
-  | (x == y) = C False 
-  | (x /= y) = (V x)
-subst (C True `And` f) (y, True) = (C True `And` (subst f (y, True)))
-subst (C False `And` f) (y, True) = (C False `And` (subst f (y, True)))
-subst (C True `And` f) (y, False) = (C True `And` (subst f (y, False)))
-subst (C False `And` f) (y, False) = (C False `And` (subst f (y, False)))
-subst ((C True) `Or` f) (y, True) = (C True `Or` (subst f (y, True)))
-subst ((C False) `Or` f) (y, True) = (C False `Or` (subst f (y, True)))
-subst ((C True) `Or` f) (y, False) = (C True `Or` (subst f (y, False)))
-subst ((C False) `Or` f) (y, False) = (C False `Or` (subst f (y, False)))
-subst (Not (C True) `And` f) (y, True) = (Not (C True) `And` (subst f (y, True)))
-subst (Not (C False) `And` f) (y, True) = (Not (C False) `And` (subst f (y, True)))
-subst (Not (C True) `And` f) (y, False) = (Not (C True) `And` (subst f (y, False)))
-subst (Not (C False) `And` f) (y, False) = (Not (C False) `And` (subst f (y, False)))
-subst (Not (C True) `Or` f) (y, True) = (Not (C True) `Or` (subst f (y, True)))
-subst (Not (C False) `Or` f) (y, True) = (Not (C False) `Or` (subst f (y, True)))
-subst (Not (C True) `Or` f) (y, False) = (Not (C True) `Or` (subst f (y, False)))
-subst (Not (C False) `Or` f) (y, False) = (Not (C False) `Or` (subst f (y, False)))
-subst (C True) _ = C True
-subst (C False) _ = C False
-subst (Not (C True)) _ = Not (C True)
-subst (Not (C False)) _ = Not (C False)
--- rewrite subst
+subst (Not (V x))(y, b) = Not (subst (V x)(y, b))
+subst (C b)(y, bl) = (C b)
+subst (Not (C b))(y, bl) = Not (C b)
+subst ((V x) `And` f)(y, b)
+  | (x == y) = ((C b) `And` (subst f(y, b)))
+  | (x /= y) = ((V x) `And` (subst f(y, b)))
+subst ((V x) `Or` f)(y, b)
+  | (x == y) = ((C b) `Or` (subst f(y, b)))
+  | (x /= y) = ((V x) `Or` (subst f(y, b)))
+subst ((Not (V x)) `And` f)(y, b) = Not (subst ((V x) `And` f)(y, b))
+subst ((Not (V x)) `Or` f)(y, b) = Not (subst ((V x) `Or` f)(y, b))
+subst ((C b) `And` f)(y, bl) = ((C b) `And` (subst f(y, bl)))
+subst ((C b) `Or` f)(y, bl) = ((C b) `Or` (subst f(y, bl)))
+subst ((Not (C b)) `And` f)(y, bl) = Not ((C b) `And` f)(y, bl))
+subst ((Not (C b)) `Or` f)(y, bl) = Not ((C b) `Or` f)(y, bl))
 
 substAll :: Form -> [(String, Bool)] -> Form
 substAll = foldl subst
@@ -137,7 +101,6 @@ models f vl (vn:vns) = (models f ((vn, True):vl) vns) ++ (models f ((vn, False):
 models f vl []
   | (evalSubst f vl) == True = [vl]
   | otherwise = []
--- models is wrong
 
 allModels :: Form -> [[(String, Bool)]]
 allModels f = models f [] (fv f)
