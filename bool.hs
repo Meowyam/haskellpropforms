@@ -51,14 +51,10 @@ cnf f = f
 -- C True
 
 fvList :: Form -> [String]
-fvList (V x `And` f) = x : fvList f
-fvList (V x `Or` f) = x : fvList f
 fvList (V x) = [x]
-fvList ((C _) `And` f) = [] : fvList f
-fvList ((C _) `Or` f) = [] : fvList f
 fvList (C _) = []
-fvList (Not f1 `And` f2) = (fvList f1) ++ (fvList f2)
-fvList (Not f1 `Or` f2) = (fvList f1) ++ (fvList f2)
+fvList (f1 `And` f2) = (fvList f1) ++ (fvList f2)
+fvList (f1 `Or` f2) = (fvList f1) ++ (fvList f2)
 fvList (Not f) = fvList f
 
 fv :: Form -> [String]
@@ -85,10 +81,11 @@ evalSubst :: Form -> [(String, Bool)] -> Bool
 evalSubst f l = getBool $ simplifyConst $ (substAll (nnf f) l)
 
 models :: Form -> [(String, Bool)] -> [String] -> [[(String, Bool)]]
+models f vl (vn:vns)
+  = (models f ((vn, True):vl) vns) ++ (models f ((vn, False):vl) vns)
 models f vl []
   | (evalSubst f vl) == True = [vl]
   | otherwise = []
-models f vl (vn:vns) = (models f ((vn, True):vl) vns) ++ (models f ((vn, False):vl) vns)
 
 allModels :: Form -> [[(String, Bool)]]
 allModels f = models f [] (fv f)
