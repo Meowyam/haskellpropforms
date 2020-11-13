@@ -82,8 +82,8 @@ subst ((Not (V x)) `And` f)(y, b) = Not (subst ((V x) `And` f)(y, b))
 subst ((Not (V x)) `Or` f)(y, b) = Not (subst ((V x) `Or` f)(y, b))
 subst ((C b) `And` f)(y, bl) = ((C b) `And` (subst f(y, bl)))
 subst ((C b) `Or` f)(y, bl) = ((C b) `Or` (subst f(y, bl)))
-subst ((Not (C b)) `And` f)(y, bl) = Not ((C b) `And` f)(y, bl))
-subst ((Not (C b)) `Or` f)(y, bl) = Not ((C b) `Or` f)(y, bl))
+subst ((Not (C b)) `And` f)(y, bl) = Not ((C b) `And` (subst f(y, bl)))
+subst ((Not (C b)) `Or` f)(y, bl) = Not ((C b) `Or` (subst f(y, bl)))
 
 substAll :: Form -> [(String, Bool)] -> Form
 substAll = foldl subst
