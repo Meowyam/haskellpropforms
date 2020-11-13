@@ -53,28 +53,25 @@ cnf f = f
 fvList :: Form -> [String]
 fvList (V x `And` f) = x : fvList f
 fvList (V x `Or` f) = x : fvList f
-fvList (Not (V x) `And` f) = x : fvList f
-fvList (Not (V x) `Or` f) = x : fvList f
-fvList (Not (V x)) = [x]
 fvList (V x) = [x]
-fvList (C _) = []
 fvList ((C _) `And` f) = [] : fvList f
 fvList ((C _) `Or` f) = [] : fvList f
-fvList (Not f) = fvList f
+fvList (C _) = []
 fvList (Not f1 `And` f2) = (fvList f1) ++ (fvList f2)
 fvList (Not f1 `Or` f2) = (fvList f1) ++ (fvList f2)
+fvList (Not f) = fvList f
 
 fv :: Form -> [String]
 fv f = nub $ fvList $ nnf f
 
 subst :: Form -> (String, Bool) -> Form
-subst (f1 `And` f2)(y, b) = (subst f1(y, b) `And` subst f2(y, b))
-subst (f1 `Or` f2)(y, b) = (subst f1(y, b) `Or` subst f2(y, b))
-subst (Not f)(y, b) = Not (subst f(y, b))
 subst (V x)(y, b)
   | (x == y) = (C b)
   | (x /= y) = (V x)
 subst (C b)(y, bl) = (C b)
+subst (f1 `And` f2)(y, b) = (subst f1(y, b) `And` subst f2(y, b))
+subst (f1 `Or` f2)(y, b) = (subst f1(y, b) `Or` subst f2(y, b))
+subst (Not f)(y, b) = Not (subst f(y, b))
 
 substAll :: Form -> [(String, Bool)] -> Form
 substAll = foldl subst
@@ -88,10 +85,10 @@ evalSubst :: Form -> [(String, Bool)] -> Bool
 evalSubst f l = getBool $ simplifyConst $ (substAll (nnf f) l)
 
 models :: Form -> [(String, Bool)] -> [String] -> [[(String, Bool)]]
-models f vl (vn:vns) = (models f ((vn, True):vl) vns) ++ (models f ((vn, False):vl) vns)
 models f vl []
   | (evalSubst f vl) == True = [vl]
   | otherwise = []
+models f vl (vn:vns) = (models f ((vn, True):vl) vns) ++ (models f ((vn, False):vl) vns)
 
 allModels :: Form -> [[(String, Bool)]]
 allModels f = models f [] (fv f)
