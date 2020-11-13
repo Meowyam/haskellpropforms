@@ -58,6 +58,8 @@ fvList (Not (V x) `Or` f) = x : fvList f
 fvList (Not (V x)) = [x]
 fvList (V x) = [x]
 fvList (C _) = []
+fvList ((C _) `And` f) = [] : fvList f
+fvList ((C _) `Or` f) = [] : fvList f
 fvList (Not f) = fvList f
 fvList (Not f1 `And` f2) = (fvList f1) ++ (fvList f2)
 fvList (Not f1 `Or` f2) = (fvList f1) ++ (fvList f2)
@@ -66,24 +68,13 @@ fv :: Form -> [String]
 fv f = nub $ fvList $ nnf f
 
 subst :: Form -> (String, Bool) -> Form
+subst (f1 `And` f2)(y, b) = (subst f1(y, b) `And` subst f2(y, b))
+subst (f1 `Or` f2)(y, b) = (subst f1(y, b) `Or` subst f2(y, b))
+subst (Not f)(y, b) = Not (subst f(y, b))
 subst (V x)(y, b)
   | (x == y) = (C b)
   | (x /= y) = (V x)
-subst (Not (V x))(y, b) = Not (subst (V x)(y, b))
 subst (C b)(y, bl) = (C b)
-subst (Not (C b))(y, bl) = Not (C b)
-subst ((V x) `And` f)(y, b)
-  | (x == y) = ((C b) `And` (subst f(y, b)))
-  | (x /= y) = ((V x) `And` (subst f(y, b)))
-subst ((V x) `Or` f)(y, b)
-  | (x == y) = ((C b) `Or` (subst f(y, b)))
-  | (x /= y) = ((V x) `Or` (subst f(y, b)))
-subst ((Not (V x)) `And` f)(y, b) = Not (subst ((V x) `And` f)(y, b))
-subst ((Not (V x)) `Or` f)(y, b) = Not (subst ((V x) `Or` f)(y, b))
-subst ((C b) `And` f)(y, bl) = ((C b) `And` (subst f(y, bl)))
-subst ((C b) `Or` f)(y, bl) = ((C b) `Or` (subst f(y, bl)))
-subst ((Not (C b)) `And` f)(y, bl) = Not ((C b) `And` (subst f(y, bl)))
-subst ((Not (C b)) `Or` f)(y, bl) = Not ((C b) `Or` (subst f(y, bl)))
 
 substAll :: Form -> [(String, Bool)] -> Form
 substAll = foldl subst
