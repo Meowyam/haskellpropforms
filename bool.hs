@@ -190,7 +190,7 @@ findHead rls h =
 
 solveProp :: [Rule] -> String -> Bool
 solveProp rls p =
-  (any (\x -> getVar x == p && (solveGoal rls (getString x) == True)) rls)
+  any (\x -> (getVar x) == p && (solveGoal rls (getString x) == True)) rls
 
 solveGoal :: [Rule] -> [String] -> Bool
 solveGoal rls ps =
