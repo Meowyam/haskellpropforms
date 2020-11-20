@@ -148,6 +148,7 @@ thisThing r =
 
 impliesWhat :: Rule -> [Form]
 impliesWhat r
+  | null (getString r) = []
   | (xs == []) = (V x) : []
   | otherwise = (V x) : impliesWhat (Rl v xs)
   where
@@ -160,5 +161,11 @@ getImplies r =
 
 ruleToForm :: Rule -> Form
 ruleToForm r = conj (getImplies r)
+
+goalToForm :: Goal -> Form
+goalToForm (Gl v) = conj $ fmap V v
+
+progToForm (Pr r g) =
+  conj $ fmap ruleToForm r
 
 --
