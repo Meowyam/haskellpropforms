@@ -95,3 +95,70 @@ unsatisfiable f = null (allModels f)
 
 valid :: Form -> Bool
 valid f = (unsatisfiable (Not f))
+
+---
+
+data Rule
+  = Rl String [String]
+  deriving (Eq, Show)
+
+data Goal
+  = Gl [String]
+  deriving (Eq, Show)
+
+data Prog
+  = Pr [Rule] Goal
+  deriving (Eq, Show)
+
+mortalSocrates :: Prog
+mortalSocrates
+  = Pr
+  [Rl "h" [],
+   Rl "m" ["h"]
+  ]
+  (Gl ["m"])
+
+abcdProg :: Prog
+abcdProg
+  = Pr
+  [Rl "a" [],
+   Rl "d" ["b", "c"],
+   Rl "d" ["a", "c"],
+   Rl "c" ["a"]
+  ]
+  (Gl ["d", "c"])
+
+implies :: Form -> Form -> Form
+implies f g = (Not f) `Or` g
+
+conj :: [Form] -> Form
+conj [] = C True
+conj (f:fs) = foldl (\x y -> x `And` y) f fs 
+
+getVar :: Rule -> String
+getVar (Rl v _) = v
+
+getString :: Rule -> [String] 
+getString (Rl _ s) = s 
+
+--
+thisThing :: Rule -> Form
+thisThing r =
+  V (getVar r)
+
+impliesWhat :: Rule -> [Form]
+impliesWhat r
+  | (xs == []) = (V x) : []
+  | otherwise = (V x) : impliesWhat (Rl v xs)
+  where
+    v = getVar r
+    (x:xs) = getString r
+
+getImplies :: Rule -> [Form]
+getImplies r =
+  fmap (implies (thisThing r)) (impliesWhat r)
+
+ruleToForm :: Rule -> Form
+ruleToForm r = conj (getImplies r)
+
+--
