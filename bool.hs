@@ -96,8 +96,6 @@ unsatisfiable f = null (allModels f)
 valid :: Form -> Bool
 valid f = (unsatisfiable (Not f))
 
----
-
 data Rule
   = Rl String [String]
   deriving (Eq, Show)
@@ -141,31 +139,23 @@ getVar (Rl v _) = v
 getString :: Rule -> [String] 
 getString (Rl _ s) = s 
 
---
-thisThing :: Rule -> Form
-thisThing r =
+getHead :: Rule -> Form
+getHead r =
   V (getVar r)
 
-impliesWhat :: Rule -> [Form]
-impliesWhat r
-  | null (getString r) = []
-  | (xs == []) = (V x) : []
-  | otherwise = (V x) : impliesWhat (Rl v xs)
-  where
-    v = getVar r
-    (x:xs) = getString r
-
-getImplies :: Rule -> [Form]
-getImplies r =
-  fmap (implies (thisThing r)) (impliesWhat r)
+getBody :: Rule -> [Form]
+getBody r =
+  fmap V (getString r)
 
 ruleToForm :: Rule -> Form
-ruleToForm r = conj (getImplies r)
+ruleToForm r = implies (conj $ getBody r) (getHead r)
 
 goalToForm :: Goal -> Form
 goalToForm (Gl v) = conj $ fmap V v
 
 progToForm (Pr r g) =
-  conj $ fmap ruleToForm r
+  implies (conj $ (fmap ruleToForm r)) (goalToForm g)
 
---
+-- interlude
+
+
