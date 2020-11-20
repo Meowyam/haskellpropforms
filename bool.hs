@@ -96,6 +96,8 @@ unsatisfiable f = null (allModels f)
 valid :: Form -> Bool
 valid f = (unsatisfiable (Not f))
 
+-- propositional prolog
+
 data Rule
   = Rl String [String]
   deriving (Eq, Show)
@@ -113,6 +115,14 @@ mortalSocrates
   = Pr
   [Rl "h" [],
    Rl "m" ["h"]
+  ]
+  (Gl ["m"])
+
+immortalSocrates :: Prog
+immortalSocrates
+  = Pr
+  [Rl "h" [],
+   Rl "h" ["m"]
   ]
   (Gl ["m"])
 
@@ -153,9 +163,57 @@ ruleToForm r = implies (conj $ getBody r) (getHead r)
 goalToForm :: Goal -> Form
 goalToForm (Gl v) = conj $ fmap V v
 
+progToForm :: Prog -> Form
 progToForm (Pr r g) =
-  implies (conj $ (fmap ruleToForm r)) (goalToForm g)
+  implies (conj $ fmap ruleToForm r) (goalToForm g)
 
 -- interlude
 
+divls = [1,4,5,9]
+anydiv3 l = any (\x -> mod x 3 == 0) l
+alldiv3 l = all (\x -> mod x 3 == 0) l
 
+sqls = [1, -3, 4, -5]
+sqneg l = [(x^2) | x <- l, x < 0]
+
+getRule :: Prog -> [Rule]
+getRule (Pr r _) = r
+
+getGoal :: Prog -> [String]
+getGoal (Pr _ (Gl g)) = g
+
+findHead :: [Rule] -> String -> [Rule]
+findHead rls h =
+  [r | r <- rls, (getVar r) == h]
+
+-- running prop prolog progs
+
+solveProp :: [Rule] -> String -> Bool
+solveProp rls p =
+  any (\x -> getVar x == p) rls
+
+solveGoal :: [Rule] -> [String] -> Bool
+solveGoal rls ps =
+  all (\x -> (solveProp rls x) == True) ps
+
+runProg :: Prog -> Bool
+runProg p =
+  solveGoal (getRule p) (getGoal p)
+
+nonterminating :: Prog
+nonterminating =
+  Pr
+  [Rl "h" [],
+   Rl "m" ["m", "h"],
+   Rl "m" ["h"]
+  ]
+  (Gl ["m"])
+
+terminating :: Prog
+terminating
+  = Pr
+  [Rl "h" [],
+   Rl "m" ["h"],
+   Rl "m" ["m", "h"]
+  ]
+  (Gl ["m"])
