@@ -1,4 +1,5 @@
 import Data.List
+import Control.Monad
 
 data Form
     = C Bool
@@ -150,15 +151,13 @@ getString :: Rule -> [String]
 getString (Rl _ s) = s 
 
 getHead :: Rule -> Form
-getHead r =
-  V (getVar r)
+getHead = V . getVar
 
 getBody :: Rule -> [Form]
-getBody r =
-  fmap V (getString r)
+getBody = fmap V . getString
 
 ruleToForm :: Rule -> Form
-ruleToForm r = implies (conj $ getBody r) (getHead r)
+ruleToForm = (implies . conj . getBody) <*> getHead
 
 goalToForm :: Goal -> Form
 goalToForm (Gl v) = conj $ fmap V v
@@ -190,15 +189,15 @@ findHead rls h =
 
 solveProp :: [Rule] -> String -> Bool
 solveProp rls p =
-  any (\x -> (getVar x) == p && (solveGoal rls (getString x) == True)) rls
+  any (((&&) . (p ==) . getVar) <*> (solveGoal rls . getString)) rls
 
 solveGoal :: [Rule] -> [String] -> Bool
-solveGoal rls ps =
-  all (\x -> (solveProp rls x) == True) ps
+solveGoal =
+  all . solveProp
 
 runProg :: Prog -> Bool
-runProg p =
-  solveGoal (getRule p) (getGoal p)
+runProg =
+  liftM2 solveGoal getRule getGoal
 
 nonterminating :: Prog
 nonterminating =
