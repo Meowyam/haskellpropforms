@@ -1,5 +1,5 @@
 import Data.List
-import Control.Monad
+import Control.Applicative
 
 data Form
     = C Bool
@@ -59,7 +59,7 @@ fvList (f1 `Or` f2) = (fvList f1) ++ (fvList f2)
 fvList (Not f) = fvList f
 
 fv :: Form -> [String]
-fv f = nub $ fvList $ nnf f
+fv = nub . fvList . nnf
 
 subst :: Form -> (String, Bool) -> Form
 subst (V x)(y, b)
@@ -85,17 +85,17 @@ models :: Form -> [(String, Bool)] -> [String] -> [[(String, Bool)]]
 models f vl (vn:vns)
   = (models f ((vn, True):vl) vns) ++ (models f ((vn, False):vl) vns)
 models f vl []
-  | (evalSubst f vl) == True = [vl]
+  | (evalSubst f vl) = [vl]
   | otherwise = []
 
 allModels :: Form -> [[(String, Bool)]]
-allModels f = models f [] (fv f)
+allModels = (flip models []) <*> fv
 
 unsatisfiable :: Form -> Bool
-unsatisfiable f = null (allModels f)
+unsatisfiable = null . allModels
 
 valid :: Form -> Bool
-valid f = (unsatisfiable (Not f))
+valid = unsatisfiable . Not
 
 -- propositional prolog
 
@@ -138,11 +138,11 @@ abcdProg
   (Gl ["d", "c"])
 
 implies :: Form -> Form -> Form
-implies f g = (Not f) `Or` g
+implies = Or . Not 
 
 conj :: [Form] -> Form
 conj [] = C True
-conj (f:fs) = foldl (\x y -> x `And` y) f fs 
+conj (f:fs) = foldr And f fs 
 
 getVar :: Rule -> String
 getVar (Rl v _) = v
@@ -197,7 +197,7 @@ solveGoal =
 
 runProg :: Prog -> Bool
 runProg =
-  liftM2 solveGoal getRule getGoal
+  liftA2 solveGoal getRule getGoal
 
 nonterminating :: Prog
 nonterminating =
